@@ -103,7 +103,7 @@ async function syncWidget(unit, result, extra) {
   if (!SPOT || !SPOT.setWidgetSnapshot) return false;
   const snapshot = {
     unitId: unit ? unit.id : '',
-    number: unit ? unit.number : 'RoadProof',
+    number: unit ? unit.number : 'TripProof',
     overall: result ? result.overall : 'notEvaluated',
     pass: result ? result.counts.pass : 0,
     warn: result ? result.counts.warn : 0,

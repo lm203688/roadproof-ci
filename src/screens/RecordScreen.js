@@ -9,7 +9,7 @@ function asText(unit, inspections) {
     .slice(-10)
     .reverse()
     .map((i) => `${i.at.slice(0, 16).replace('T', ' ')} ${i.type} · ${i.overall} · ${i.odometer || '-'} mi · ${i.hash}`);
-  return ['RoadProof driver vehicle inspection record', head, '', ...rows, '', 'Record only. Not a roadworthiness certificate.'].join('\n');
+  return ['TripProof driver vehicle inspection record', head, '', ...rows, '', 'Record only. Not a roadworthiness certificate.'].join('\n');
 }
 
 export default function ReportScreen({ unit, inspections, chain, onNav }) {

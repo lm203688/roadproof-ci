@@ -2,7 +2,7 @@
   "name": "roadproof",
   "version": "0.1.0",
   "private": true,
-  "description": "RoadProof — a 49 CFR 396.11 walk-around record for one truck",
+  "description": "TripProof — a 49 CFR 396.11 walk-around record for one truck",
   "main": "index.js",
   "scripts": {
     "start": "expo start",

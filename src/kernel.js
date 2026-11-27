@@ -1,4 +1,4 @@
-// RoadProof core — deterministic driver vehicle inspection math only.
+// TripProof core — deterministic driver vehicle inspection math only.
 // No I/O, no randomness, no network. The checklist mirrors the parts named in
 // 49 CFR 396.11(a)(2); every judgement here is arithmetic on values the driver
 // entered, so a sign-off can be replayed against the rule version that made it.

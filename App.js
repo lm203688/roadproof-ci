@@ -109,7 +109,7 @@ export default function App() {
       <StatusBar style="dark" />
       <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
         <View style={styles.header}>
-          <Text style={styles.brand}>RoadProof</Text>
+          <Text style={styles.brand}>TripProof</Text>
           <Text style={styles.tag}>one-time · offline · no account</Text>
         </View>
 
