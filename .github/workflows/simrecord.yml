@@ -74,7 +74,7 @@ jobs:
           REC=$!
           sleep 3
           xcrun simctl launch --terminate-running-process "$DEV" "$BUNDLE_ID" || true
-          sleep 80
+          sleep 62
           kill -INT $REC || true
           sleep 5
           ls -l "$OUT"
@@ -86,3 +86,4 @@ jobs:
           path: ${{ runner.temp }}/rec/*.mp4
           if-no-files-found: warn
           retention-days: 7
+

@@ -32,12 +32,14 @@ APP_TOUR = """
       await wait(3600);
       if (!alive) return;
       setTab('inspect');
-      await wait(42000);
+      await wait(32000);
       if (!alive) return;
       setTab('record');
-      await wait(6000);
+      await wait(7000);
       if (!alive) return;
       setTab('defects');
+      await wait(7000);
+      setTab('truck');
     })();
     return () => {
       alive = false;
@@ -63,7 +65,7 @@ INSPECT_TOUR = """
       for (let i = 0; i < ids.length; i += 1) {
         if (!alive) return;
         const id = ids[i];
-        const state = id === 'marker' ? 'def' : 'ok';
+        const state = id === 'marker' ? 'defect' : 'ok';
         setResults((r) => ({ ...r, [id]: { state, value: r[id] ? r[id].value : null } }));
         if (id === 'tread') setResults((r) => ({ ...r, tread: { state: 'ok', value: 6 } }));
         if (id === 'tirepressure') setResults((r) => ({ ...r, tirepressure: { state: 'ok', value: 105 } }));
@@ -110,6 +112,8 @@ def patch():
 
 if __name__ == "__main__":
     patch()
+
+
 
 
 
