@@ -1,0 +1,88 @@
+name: simrecord
+
+on:
+  workflow_dispatch:
+
+env:
+  BUNDLE_ID: ${{ vars.ROADPROOF_BUNDLE_ID }}
+  EXPO_PUBLIC_TOUR: "1"
+
+jobs:
+  record:
+    runs-on: xcode-27
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install --no-audit --no-fund --legacy-peer-deps
+
+      - name: Inject recording tour (workspace only)
+        run: python3 scripts/ci_patch_tour.py
+
+      - name: Prebuild iOS project
+        env:
+          ROADPROOF_BUNDLE_ID: ${{ vars.ROADPROOF_BUNDLE_ID }}
+          ROADPROOF_WIDGET_BUNDLE_ID: ${{ vars.ROADPROOF_WIDGET_BUNDLE_ID }}
+          ROADPROOF_TEAM_ID: ${{ vars.ROADPROOF_TEAM_ID }}
+        run: npx expo prebuild --platform ios --clean --non-interactive
+
+      - name: Pick a 6.9in simulator
+        id: sim
+        run: |
+          NAME=$(xcrun simctl list devices available | grep -o 'iPhone 1[6-9] Pro Max' | head -1)
+          if [ -z "$NAME" ]; then NAME=$(xcrun simctl list devices available | grep -o 'iPhone 1[6-9] Plus' | head -1); fi
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "using: $NAME"
+
+      - name: Build release app for simulator
+        run: |
+          set -o pipefail
+          cd ios
+          WORKSPACE=$(ls -d *.xcworkspace | head -1)
+          SCHEME="${WORKSPACE%.xcworkspace}"
+          echo "scheme=$SCHEME"
+          xcodebuild build \
+            -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tail -30
+          APP=$(find "$RUNNER_TEMP/dd/Build/Products/Release-iphonesimulator" -maxdepth 1 -name "*.app")
+          echo "app=$APP"
+          ls -l "$APP/main.jsbundle" || echo "NO EMBEDDED BUNDLE"
+
+      - name: Boot simulator
+        run: |
+          DEV="${{ steps.sim.outputs.name }}"
+          xcrun simctl boot "$DEV" || true
+          xcrun simctl bootstatus "$DEV" -b || true
+          xcrun simctl uninstall "$DEV" "$BUNDLE_ID" || true
+          xcrun simctl status_bar "$DEV" override --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 || true
+
+      - name: Record the tour
+        run: |
+          set -x
+          DEV="${{ steps.sim.outputs.name }}"
+          APP=$(find "$RUNNER_TEMP/dd/Build/Products/Release-iphonesimulator" -maxdepth 1 -name "*.app")
+          OUT="$RUNNER_TEMP/rec"
+          mkdir -p "$OUT"
+          xcrun simctl install "$DEV" "$APP"
+          xcrun simctl io "$DEV" recordVideo --codec h264 --force "$OUT/roadproof-demo.mp4" &
+          REC=$!
+          sleep 3
+          xcrun simctl launch --terminate-running-process "$DEV" "$BUNDLE_ID" || true
+          sleep 80
+          kill -INT $REC || true
+          sleep 5
+          ls -l "$OUT"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: roadproof-demo
+          path: ${{ runner.temp }}/rec/*.mp4
+          if-no-files-found: warn
+          retention-days: 7
